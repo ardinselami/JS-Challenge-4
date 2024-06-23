@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Timer Studimi</title>
+  <style>
+    #progress-container {
+      width: 100%;
+      background-color: #ddd;
+      margin-top: 20px;
+    }
+
+    #progress-bar {
+      width: 0;
+      height: 30px;
+      background-color: #4caf50;
+    }
+  </style>
+</head>
+<body>
+  <h1>Timer Studimi i Personalizuar</h1>
+  <form id="formaTimerit">
+    <label for="kohezgjatjaStudimit">Kohezgjatja e Studimit (minuta):</label>
+    <input type="number" id="kohezgjatjaStudimit" name="kohezgjatjaStudimit" min="1" required><br><br>
+    <label for="kohezgjatjaPushimit">Kohezgjatja e Pushimit (minuta):</label>
+    <input type="number" id="kohezgjatjaPushimit" name="kohezgjatjaPushimit" min="1" required><br><br>
+    <button type="submit">Vendos Timerin</button>
+  </form>
+
+  <div id="progress-container">
+    <div id="progress-bar"></div>
+  </div>
+
+  <script>document.addEventListener('DOMContentLoaded', () => {
+    const forma = document.getElementById('formaTimerit');
+    const inputStudimi = document.getElementById('kohezgjatjaStudimit');
+    const inputPushimi = document.getElementById('kohezgjatjaPushimit');
+    const progressBar = document.getElementById('progress-bar');
+  
+    // Kontrollo nëse kohezgjatjet e studimit dhe pushimit janë të ruajtura në local storage
+    const kohezgjatjaStudimitRuajtur = localStorage.getItem('kohezgjatjaStudimit');
+    const kohezgjatjaPushimitRuajtur = localStorage.getItem('kohezgjatjaPushimit');
+  
+    if (kohezgjatjaStudimitRuajtur) {
+      inputStudimi.value = kohezgjatjaStudimitRuajtur;
+    }
+  
+    if (kohezgjatjaPushimitRuajtur) {
+      inputPushimi.value = kohezgjatjaPushimitRuajtur;
+    }
+  
+    let interval;
+  
+    // Funksioni për të filluar timerin
+    function startTimer(duration, display, callback) {
+      let timer = duration, minutes, seconds;
+      interval = setInterval(() => {
+        minutes = parseInt(timer / 60, 10);
+        seconds = parseInt(timer % 60, 10);
+  
+        minutes = minutes < 10 ? "0" + minutes : minutes;
+        seconds = seconds < 10 ? "0" + seconds : seconds;
+  
+        display.textContent = minutes + ":" + seconds;
+  
+        if (--timer < 0) {
+          clearInterval(interval);
+          if (callback) callback();
+        }
+      }, 1000);
+    }
+  
+    // Funksioni për të filluar shiritin e progresit
+    function startProgressBar(duration) {
+      let width = 0;
+      let progress = 0;
+      const totalDuration = duration * 60;
+      const progressInterval = setInterval(() => {
+        if (progress >= totalDuration) {
+          clearInterval(progressInterval);
+        } else {
+          progress++;
+          width = (progress / totalDuration) * 100;
+          progressBar.style.width = width + '%';
+        }
+      }, 1000);
+    }
+  
+    // Funksioni për të filluar ciklin e studimit dhe pushimit
+    function startStudyBreakCycle(studyDuration, breakDuration) {
+      alert('Koha për të filluar studimin!');
+      startTimer(studyDuration * 60, progressBar, () => {
+        alert('Koha e studimit mbaroi! Fillon pushimi.');
+        startTimer(breakDuration * 60, progressBar, () => {
+          alert('Koha e pushimit mbaroi! Koha për të rifilluar studimin.');
+          startStudyBreakCycle(studyDuration, breakDuration);
+        });
+      });
+      startProgressBar(studyDuration + breakDuration);
+    }
+  
+    forma.addEventListener('submit', function(event) {
+      event.preventDefault();
+  
+      const kohezgjatjaStudimit = parseInt(inputStudimi.value);
+      const kohezgjatjaPushimit = parseInt(inputPushimi.value);
+  
+      // Ruaj kohezgjatjet në local storage
+      localStorage.setItem('kohezgjatjaStudimit', kohezgjatjaStudimit);
+      localStorage.setItem('kohezgjatjaPushimit', kohezgjatjaPushimit);
+  
+      clearInterval(interval); // Ndalo çdo timer të mëparshëm
+      progressBar.style.width = '0%'; // Rivendos shiritin e progresit
+      startStudyBreakCycle(kohezgjatjaStudimit, kohezgjatjaPushimit);
+    });
+  });</script>
+</body>
+</html>
